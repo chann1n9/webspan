@@ -87,6 +87,10 @@ class PythonistaWebSpan(WebSpanCore):
 
     # ---------- WebView Delegate ----------
 
+    def webview_did_finish_load(self, webview):
+        title = webview.eval_js("document.title")
+        webview.name = title
+
     def webview_should_start_load(
         self,
         webview,
