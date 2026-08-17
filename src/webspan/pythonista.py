@@ -51,6 +51,17 @@ class PythonistaWebSpan(WebSpanCore):
     def load_html(self, path: str | Path) -> None:
         path = Path(path).expanduser().resolve()
         html = path.read_text(encoding="utf-8")
+
+        # 在 present() 前同步设置标题，避免等待异步加载回调。
+        match = re.search(
+            r"<title\b[^>]*>(.*?)</title>",
+            html,
+            re.IGNORECASE | re.DOTALL,
+        )
+        title = match.group(1).strip() if match else ""
+        self.webview.name = title
+
+        # 设置WebView的baseURL属性，方便加载相对路径资源
         html = self._inject_base_url(
             html,
             path.parent.as_uri() + "/",
@@ -70,11 +81,11 @@ class PythonistaWebSpan(WebSpanCore):
         return base + "\n" + html
 
     def _inject_webspan(self, html):
-        script = f"""
-<script>
-{self._webspan_js}
-</script>
-"""
+        script = (
+            "\n<script>\n"
+            + self._webspan_js
+            + "\n</script>\n"
+        )
 
         if "</head>" in html:
             return html.replace(
@@ -86,10 +97,6 @@ class PythonistaWebSpan(WebSpanCore):
         return script + html
 
     # ---------- WebView Delegate ----------
-
-    def webview_did_finish_load(self, webview):
-        title = webview.eval_js("document.title")
-        webview.name = title
 
     def webview_should_start_load(
         self,
