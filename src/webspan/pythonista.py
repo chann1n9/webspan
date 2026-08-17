@@ -1,5 +1,7 @@
 import json
+import re
 from concurrent.futures import ThreadPoolExecutor
+from html import escape
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
@@ -46,9 +48,26 @@ class PythonistaWebSpan(WebSpanCore):
 
     # ---------- HTML ----------
 
-    def load_html(self, html):
+    def load_html(self, path: str | Path) -> None:
+        path = Path(path).expanduser().resolve()
+        html = path.read_text(encoding="utf-8")
+        html = self._inject_base_url(
+            html,
+            path.parent.as_uri() + "/",
+        )
         html = self._inject_webspan(html)
+
         self.webview.load_html(html)
+
+    @staticmethod
+    def _inject_base_url(html, base_url):
+        base = f'<base href="{escape(base_url, quote=True)}">'
+        head = re.search(r"<head(?:\s[^>]*)?>", html, re.IGNORECASE)
+
+        if head:
+            return html[:head.end()] + "\n" + base + html[head.end():]
+
+        return base + "\n" + html
 
     def _inject_webspan(self, html):
         script = f"""
