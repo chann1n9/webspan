@@ -5,8 +5,6 @@ from html import escape
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
-import ui
-
 from .core import WebSpanCore
 
 
@@ -19,6 +17,17 @@ class PythonistaWebSpan(WebSpanCore):
 
         self.webview = webview
         self.webview.delegate = self
+
+        self._schedule_ui = getattr(
+            webview,
+            "schedule_ui",
+            None,
+        )
+
+        if self._schedule_ui is None:
+            import ui
+
+            self._schedule_ui = ui.delay
 
         self._executor = ThreadPoolExecutor(
             max_workers=max_workers
@@ -36,6 +45,15 @@ class PythonistaWebSpan(WebSpanCore):
             wait=False,
             cancel_futures=True,
         )
+
+        release_base_url = getattr(
+            self.webview,
+            "release_base_url",
+            None,
+        )
+
+        if callable(release_base_url):
+            release_base_url()
 
     def _load_webspan_js(self):
         path = (
@@ -61,10 +79,21 @@ class PythonistaWebSpan(WebSpanCore):
         title = match.group(1).strip() if match else ""
         self.webview.name = title
 
-        # 设置WebView的baseURL属性，方便加载相对路径资源
+        # 默认直接从本地目录加载相对资源。某些 WebView 只支持 HTTP(S)，
+        # 可以通过 resolve_base_url 把目录映射成可访问的 URL。
+        base_url = path.parent.as_uri() + "/"
+        resolve_base_url = getattr(
+            self.webview,
+            "resolve_base_url",
+            None,
+        )
+
+        if callable(resolve_base_url):
+            base_url = resolve_base_url(path.parent)
+
         html = self._inject_base_url(
             html,
-            path.parent.as_uri() + "/",
+            base_url,
         )
         html = self._inject_webspan(html)
 
@@ -222,7 +251,7 @@ class PythonistaWebSpan(WebSpanCore):
         )
 
         # eval_js 必须回 UI thread
-        ui.delay(
+        self._schedule_ui(
             lambda: self.webview.eval_js(js),
             0,
         )
