@@ -1,8 +1,18 @@
+import warnings
+
+
 class WebSpanCore:
     def __init__(self):
         self._handlers = {}
 
     def route(self, name):
+        """Deprecated: register handlers explicitly with register()."""
+        warnings.warn(
+            "route() is deprecated; use register() instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         def decorator(func):
             self.register(name, func)
             return func
