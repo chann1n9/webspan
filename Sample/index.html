@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+    <link rel="stylesheet" href="mvp.css">
+
+    <style>
+        body {
+            padding: 12px 16px;
+        }
+    </style>
+
+    <title>WebSpan</title>
+</head>
+
+<body>
+    <header>
+        <h1>WebSpan</h1>
+        <p>WebSpan connects web interfaces with Pythonista capabilities, enabling rich and interactive experiences powered by Python.</p>
+        <p>
+            <a href="https://github.com/chann1n9/webspan"><i>GitHub Repo</i></a>
+            <a href="https://github.com/chann1n9/webspan/releases"><b>Releases &rarr;</b></a>
+        </p>
+    </header>
+    <main>
+        <hr>
+        <section id="usage">
+            <header>
+                <h2>Easy to Use</h2>
+            </header>
+            <article>
+                <p>Create a WebView and connect it to WebSpan:</p>
+                <pre>
+                    <code>
+webview = ui.WebView()
+span = PythonistaWebSpan(webview)
+                    </code>
+                </pre>
+                <p>Register Python functions for your web app to call:</p>
+                <pre>
+                    <code>
+span.register("getHttpbin", get_httpbin)
+                    </code>
+                </pre>
+                <details>
+                    <summary>JavaScript Call</summary>
+                    <pre><code>
+const data = await webspan.call(
+        "getHttpbin",
+        "Hello from WebSpan! 👋"
+    )
+                    </code></pre>
+                </details>
+                <details>
+                    <summary>Python Function</summary>
+                    <pre><code>
+def get_httpbin(data):
+    request = Request(
+        HTTPBIN_URL + "?" + urlencode({"message": data}),
+        headers=headers,
+    )
+
+    with urlopen(request, timeout=REQUEST_TIMEOUT) as response:
+        return json.load(response)["args"]["message"]
+                    </code></pre>
+                </details>
+                <p>Load and run your experience:</p>
+                <pre>
+                    <code>
+span.load_html(html_path)
+webview.present("fullscreen")
+                    </code>
+                </pre>
+            </article>
+        </section>
+        <hr>
+        <section id="example">
+            <header>
+                <h2>Try it</h2>
+            <p>Click the button below to make a request to httpbin.io:</p>
+            <button id="requestButton">
+                Request httpbin.io
+            </button>
+            <p id="result"></p>
+            </header>
+        </section>
+    </main>
+
+    <script>
+    const button = document.querySelector("#requestButton")
+    const result = document.querySelector("#result")
+
+    var loading = false
+
+    button.addEventListener("click", async () => {
+        if (loading) return
+
+        loading = true
+        result.textContent = "Loading..."
+
+        try {
+            const data = await webspan.call(
+                "getHttpbin",
+                "Hello from WebSpan! 👋"
+            )
+
+            result.textContent = data
+        } catch (error) {
+            result.textContent =
+                `${error.name}: ${error.message}`
+        } finally {
+            loading = false
+        }
+    })
+    </script>
+
+</body>
+</html>
