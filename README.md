@@ -12,11 +12,19 @@ third-party runtime dependencies and requires Python 3.10 or newer.
 [Releases](https://github.com/chann1n9/webspan/releases) ·
 [Complete sample](Sample/)
 
+## Installation
+
+Run the following code in Pythonista to install the latest release, then restart
+Pythonista:
+
+```python
+exec(compile(__import__("requests").get("https://raw.githubusercontent.com/chann1n9/webspan/refs/heads/main/install.py", timeout=15).text, "webspan_install.py", "exec"))
+```
+
 ## Usage
 
-Make the complete `webspan` package, including its `static/webspan.js` file,
-available on Pythonista's import path. Keep the HTML file and any relative
-assets, such as stylesheets or images, together.
+Keep the HTML file and any relative assets, such as stylesheets or images,
+together.
 
 ```python
 # app.py
